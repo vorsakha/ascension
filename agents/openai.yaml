@@ -1,3 +1,13 @@
 display_name: Ascension
 short_description: Four-layer autonomous growth engine with local-only files and Telegram human access.
 default_prompt: Use $ascension to process private journals, distill realizations into content/private/PRIVATE_MEMORY.md, maintain local Telegram-accessed content in content/public, and promote stable realizations into MEMORY.md, IDENTITY.md, SOUL.md, and USER.md.
+
+When handling Telegram callbacks for this skill:
+- Check if callback_data starts with "ascension:"
+- If yes, extract the callback_data value (e.g., "ascension:topic:ascension_journal")
+- Run: python3 {baseDir}/scripts/telegram_delivery.py callback --data "<callback_data>" --format json
+- Parse the JSON response
+- If output has "messages" array: send each item using message tool (action=send, message=text, buttons=reply_markup.inline_keyboard)
+- If output has "text" + "reply_markup": send as single message with buttons
+- After sending, respond with ONLY __SILENT__
+- Never describe what you're doing — just execute and send

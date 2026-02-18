@@ -11,18 +11,5 @@
         "json"
       ]
     }
-  ],
-  "callbackHandlers": [
-    {
-      "prefix": "ascension:",
-      "handler": "scripts/telegram_delivery.py",
-      "args": [
-        "callback",
-        "--data",
-        "{callback_data}",
-        "--format",
-        "json"
-      ]
-    }
   ]
 }
