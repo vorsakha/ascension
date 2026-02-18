@@ -1,0 +1,3 @@
+display_name: Ascension
+short_description: Four-layer autonomous growth engine with local-only files and Telegram human access.
+default_prompt: Use $ascension to process private journals, distill realizations into content/private/PRIVATE_MEMORY.md, maintain local Telegram-accessed content in content/public, and promote stable realizations into MEMORY.md, IDENTITY.md, SOUL.md, and USER.md.
