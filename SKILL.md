@@ -64,11 +64,15 @@ python3 scripts/distill.py private/<journal-file>.md --interactive
 ```bash
 python3 scripts/telegram_delivery.py menu --format json
 python3 scripts/telegram_delivery.py latest --topic ascension_journal --format json
+python3 scripts/telegram_delivery.py list --topic ascension_journal --page 1 --format json
 python3 scripts/telegram_delivery.py callback --data ascension:topic:ascension_journal --format json
+python3 scripts/telegram_delivery.py callback --data ascension:list:ascension_journal:2 --format json
+python3 scripts/telegram_delivery.py callback --data ascension:post:<post_id>:2 --format json
 ```
 
 `menu` returns a Telegram-friendly inline keyboard payload.
 `latest` returns the latest public post for a topic.
+`list` returns paginated topic posts with numbered inline buttons.
 `callback` resolves button callback data from Telegram.
 
 ### Publish private into local public content

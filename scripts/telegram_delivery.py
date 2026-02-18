@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -30,6 +32,8 @@ TOPIC_ALIASES = {
     "ascension_x": "ascension_x",
     "x": "ascension_x",
 }
+PAGE_SIZE = 6
+TELEGRAM_CHUNK_SIZE = 3900
 
 
 @dataclass
@@ -40,6 +44,7 @@ class ContentItem:
     topic: str
     ext: str
     mtime_utc: dt.datetime
+    post_id: str
 
 
 def resolve_workspace_root() -> Path:
@@ -78,6 +83,8 @@ def parse_item(path: Path, root: Path) -> ContentItem | None:
         return None
 
     stat = path.stat()
+    rel_posix = rel_path.as_posix()
+    post_id = hashlib.sha1(rel_posix.encode("utf-8")).hexdigest()[:12]
     return ContentItem(
         path=path,
         rel_path=rel_path,
@@ -85,6 +92,7 @@ def parse_item(path: Path, root: Path) -> ContentItem | None:
         topic=topic,
         ext=ext,
         mtime_utc=dt.datetime.fromtimestamp(stat.st_mtime, tz=dt.timezone.utc),
+        post_id=post_id,
     )
 
 
@@ -118,12 +126,58 @@ def latest_for_topic(items: list[ContentItem], topic: str) -> ContentItem | None
     return None
 
 
+def items_for_topic(items: list[ContentItem], topic: str) -> list[ContentItem]:
+    return [item for item in items if item.topic == topic]
+
+
+def find_post_by_id(items: list[ContentItem], post_id: str) -> ContentItem | None:
+    for item in items:
+        if item.post_id == post_id:
+            return item
+    return None
+
+
 def read_excerpt(path: Path, max_chars: int = 420) -> str:
     body = path.read_text(encoding="utf-8")
     plain = strip_markdown(body)
     if len(plain) <= max_chars:
         return plain
     return plain[: max_chars - 1].rstrip() + "…"
+
+
+def read_full_content(path: Path) -> str:
+    return strip_markdown(path.read_text(encoding="utf-8"))
+
+
+def paginate(items: list[ContentItem], page: int, page_size: int) -> tuple[list[ContentItem], int, int]:
+    if page_size <= 0:
+        page_size = PAGE_SIZE
+    total_pages = max(1, math.ceil(len(items) / page_size))
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * page_size
+    end = start + page_size
+    return items[start:end], page, total_pages
+
+
+def split_text_for_telegram(text: str, chunk_size: int = TELEGRAM_CHUNK_SIZE) -> list[str]:
+    if len(text) <= chunk_size:
+        return [text]
+
+    chunks: list[str] = []
+    rest = text
+    while len(rest) > chunk_size:
+        split_at = rest.rfind("\n", 0, chunk_size)
+        if split_at <= 0:
+            split_at = chunk_size
+        chunk = rest[:split_at].rstrip()
+        if not chunk:
+            chunk = rest[:chunk_size]
+            split_at = chunk_size
+        chunks.append(chunk)
+        rest = rest[split_at:].lstrip("\n")
+    if rest:
+        chunks.append(rest)
+    return chunks
 
 
 def menu_payload(items: list[ContentItem]) -> dict[str, Any]:
@@ -151,7 +205,94 @@ def menu_payload(items: list[ContentItem]) -> dict[str, Any]:
     }
 
 
-def content_payload(items: list[ContentItem], topic: str) -> dict[str, Any]:
+def topic_list_payload(
+    items: list[ContentItem], topic: str, page: int = 1, page_size: int = PAGE_SIZE
+) -> dict[str, Any]:
+    label = TOPIC_LABELS.get(topic, humanize(topic))
+    topic_items = items_for_topic(items, topic)
+    if not topic_items:
+        return {
+            "text": f"No public {label.lower()} content available yet.",
+            "reply_markup": {"inline_keyboard": [[{"text": "Back", "callback_data": "ascension:menu"}]]},
+        }
+
+    page_items, page, total_pages = paginate(topic_items, page, page_size)
+    lines = [
+        f"Ascension {label}",
+        f"Posts: {len(topic_items)}",
+        f"Page {page}/{total_pages}",
+        "",
+    ]
+    keyboard: list[list[dict[str, str]]] = []
+    for idx, item in enumerate(page_items, start=1):
+        date_label = item.mtime_utc.date().isoformat()
+        lines.append(f"{idx}. {date_label} - {item.title}")
+        keyboard.append(
+            [
+                {
+                    "text": f"{idx}. {item.title}",
+                    "callback_data": f"ascension:post:{item.post_id}:{page}",
+                }
+            ]
+        )
+
+    nav_row: list[dict[str, str]] = []
+    if page > 1:
+        nav_row.append(
+            {
+                "text": "Prev",
+                "callback_data": f"ascension:list:{topic}:{page - 1}",
+            }
+        )
+    if page < total_pages:
+        nav_row.append(
+            {
+                "text": "Next",
+                "callback_data": f"ascension:list:{topic}:{page + 1}",
+            }
+        )
+    if nav_row:
+        keyboard.append(nav_row)
+    keyboard.append([{"text": "Back to topics", "callback_data": "ascension:menu"}])
+
+    return {
+        "text": "\n".join(lines),
+        "reply_markup": {"inline_keyboard": keyboard},
+    }
+
+
+def post_payload(items: list[ContentItem], post_id: str, return_page: int = 1) -> dict[str, Any]:
+    item = find_post_by_id(items, post_id)
+    if not item:
+        return {
+            "text": "Post not found.",
+            "reply_markup": {"inline_keyboard": [[{"text": "Back to topics", "callback_data": "ascension:menu"}]]},
+        }
+
+    body = read_full_content(item.path)
+    stamp = item.mtime_utc.strftime("%Y-%m-%d %H:%M UTC")
+    text = (
+        f"Title: {item.title}\n"
+        f"Updated: {stamp}\n"
+        f"Path: content/public/{item.rel_path.as_posix()}\n\n"
+        f"{body}"
+    )
+    chunks = split_text_for_telegram(text)
+    keyboard = {
+        "inline_keyboard": [
+            [{"text": "Back to list", "callback_data": f"ascension:list:{item.topic}:{max(1, return_page)}"}],
+            [{"text": "Back to topics", "callback_data": "ascension:menu"}],
+        ]
+    }
+    if len(chunks) == 1:
+        return {"text": chunks[0], "reply_markup": keyboard}
+
+    messages = [{"text": chunk} for chunk in chunks]
+    messages[-1]["reply_markup"] = keyboard
+    return {"messages": messages}
+
+
+def latest_payload(items: list[ContentItem], topic: str) -> dict[str, Any]:
     label = TOPIC_LABELS.get(topic, humanize(topic))
     item = latest_for_topic(items, topic)
     if not item:
@@ -185,6 +326,22 @@ def print_payload(payload: dict[str, Any], output_format: str) -> int:
         print(json.dumps(payload, ensure_ascii=True, indent=2))
         return 0
 
+    messages = payload.get("messages")
+    if isinstance(messages, list):
+        for index, message in enumerate(messages, start=1):
+            print(f"[Message {index}]")
+            print(message.get("text", ""))
+            markup = message.get("reply_markup", {})
+            inline_keyboard = markup.get("inline_keyboard", [])
+            if inline_keyboard:
+                print("\nButtons:")
+                for row in inline_keyboard:
+                    for button in row:
+                        print(f"- {button['text']} => {button['callback_data']}")
+            if index != len(messages):
+                print()
+        return 0
+
     print(payload.get("text", ""))
     markup = payload.get("reply_markup", {})
     inline_keyboard = markup.get("inline_keyboard", [])
@@ -196,16 +353,36 @@ def print_payload(payload: dict[str, Any], output_format: str) -> int:
     return 0
 
 
-def resolve_callback_topic(data: str) -> str | None:
+def resolve_callback_action(data: str) -> tuple[str, Any] | None:
     data = data.strip()
     if data == "ascension:menu":
-        return "__menu__"
+        return ("menu",)
 
-    prefix = "ascension:topic:"
-    if not data.startswith(prefix):
+    parts = data.split(":")
+    if len(parts) < 3 or parts[0] != "ascension":
         return None
-    maybe_topic = data[len(prefix) :].strip().lower()
-    return TOPIC_ALIASES.get(maybe_topic, maybe_topic)
+
+    if parts[1] == "topic" and len(parts) == 3:
+        topic = TOPIC_ALIASES.get(parts[2].strip().lower(), parts[2].strip().lower())
+        return ("list", topic, 1)
+
+    if parts[1] == "list" and len(parts) == 4:
+        topic = TOPIC_ALIASES.get(parts[2].strip().lower(), parts[2].strip().lower())
+        try:
+            page = int(parts[3].strip())
+        except ValueError:
+            return None
+        return ("list", topic, max(1, page))
+
+    if parts[1] == "post" and len(parts) == 4:
+        post_id = parts[2].strip().lower()
+        try:
+            return_page = int(parts[3].strip())
+        except ValueError:
+            return None
+        return ("post", post_id, max(1, return_page))
+
+    return None
 
 
 def parse_args() -> argparse.Namespace:
@@ -220,6 +397,12 @@ def parse_args() -> argparse.Namespace:
     latest_parser.add_argument("--topic", required=True, help="Topic alias or canonical topic")
     latest_parser.add_argument("--content-root", help="Override content/public root path")
     latest_parser.add_argument("--format", choices=["text", "json"], default="text")
+
+    list_parser = subparsers.add_parser("list", help="Return paginated post list for a topic")
+    list_parser.add_argument("--topic", required=True, help="Topic alias or canonical topic")
+    list_parser.add_argument("--page", type=int, default=1, help="1-based page number")
+    list_parser.add_argument("--content-root", help="Override content/public root path")
+    list_parser.add_argument("--format", choices=["text", "json"], default="text")
 
     callback_parser = subparsers.add_parser("callback", help="Resolve Telegram callback data")
     callback_parser.add_argument("--data", required=True, help="Callback payload string")
@@ -246,15 +429,25 @@ def main() -> int:
 
     if args.command == "latest":
         topic = TOPIC_ALIASES.get(args.topic.strip().lower(), args.topic.strip().lower())
-        return print_payload(content_payload(items, topic), args.format)
+        return print_payload(latest_payload(items, topic), args.format)
+
+    if args.command == "list":
+        topic = TOPIC_ALIASES.get(args.topic.strip().lower(), args.topic.strip().lower())
+        return print_payload(topic_list_payload(items, topic, page=max(1, args.page)), args.format)
 
     if args.command == "callback":
-        resolved = resolve_callback_topic(args.data)
-        if resolved is None:
+        action = resolve_callback_action(args.data)
+        if action is None:
             return print_payload({"text": "Unknown callback action."}, args.format)
-        if resolved == "__menu__":
+        if action[0] == "menu":
             return print_payload(menu_payload(items), args.format)
-        return print_payload(content_payload(items, resolved), args.format)
+        if action[0] == "list":
+            _, topic, page = action
+            return print_payload(topic_list_payload(items, topic, page=page), args.format)
+        if action[0] == "post":
+            _, post_id, return_page = action
+            return print_payload(post_payload(items, post_id, return_page=return_page), args.format)
+        return print_payload({"text": "Unknown callback action."}, args.format)
 
     raise SystemExit(f"Unhandled command: {args.command}")
 

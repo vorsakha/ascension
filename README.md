@@ -123,12 +123,24 @@ python3 scripts/telegram_delivery.py latest --topic music --format json
 python3 scripts/telegram_delivery.py latest --topic scroll --format json
 ```
 
+List by topic (paginated, 6 posts/page):
+
+```bash
+python3 scripts/telegram_delivery.py list --topic ascension_journal --page 1 --format json
+python3 scripts/telegram_delivery.py list --topic music --page 2 --format json
+```
+
 Callback resolution:
 
 ```bash
 python3 scripts/telegram_delivery.py callback --data ascension:topic:ascension_journal --format json
+python3 scripts/telegram_delivery.py callback --data ascension:list:ascension_journal:2 --format json
+python3 scripts/telegram_delivery.py callback --data ascension:post:<post_id>:2 --format json
 python3 scripts/telegram_delivery.py callback --data ascension:menu --format json
 ```
+
+`ascension:topic:<topic>` opens page 1 of that topic list.
+Long posts may return a JSON envelope with `messages[]` in send order.
 
 ## OpenClaw wiring
 
