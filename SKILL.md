@@ -29,8 +29,6 @@ Keep filenames app-compatible where applicable: `<title>.<topic>.md`.
 - `skill:ascension/latest [topic]`
 - `/ascension` (OpenClaw Telegram command)
 
-OpenClaw command and callback dispatch is defined in `skill.json` at the skill root.
-
 ## Script Usage
 
 ### Create post draft
@@ -61,7 +59,26 @@ python3 scripts/distill.py private/<journal-file>.md --interactive
 `--interactive` prompts for each field before writing.
 `--dry-run` previews the generated entry without modifying `PRIVATE_MEMORY.md`.
 
-### Telegram delivery (deterministic, human access channel)
+## Telegram Delivery
+
+When `/ascension` is invoked or a menu is requested:
+
+1. Run: `python3 {baseDir}/scripts/telegram_delivery.py menu --format json`
+2. Parse the JSON output: `{ "text": "...", "reply_markup": { "inline_keyboard": [[...], ...] } }`
+3. Use the `message` tool with `action=send`, `message=<text>`, and `buttons=<inline_keyboard>` (the `inline_keyboard` value is already a 2D array of `{text, callback_data}` objects — pass it directly as `buttons`)
+4. Respond with ONLY `__SILENT__` after sending (prevents a duplicate text reply)
+
+When a callback arrives as `callback_data: ascension:<...>`:
+
+1. Extract the full value after `callback_data: ` (e.g. `ascension:topic:ascension_journal`)
+2. Run: `python3 {baseDir}/scripts/telegram_delivery.py callback --data "<value>" --format json`
+3. If output has a `"messages"` array: send each item in sequence using `message` tool `action=send` (with `buttons` from each item's `reply_markup.inline_keyboard` where present)
+4. If output has `"text"` + `"reply_markup"`: send as a single `message` with `buttons`
+5. Respond with ONLY `__SILENT__` after sending
+
+Never describe what the skill does — always execute the script and deliver the result directly.
+
+### Telegram delivery script reference
 
 ```bash
 python3 scripts/telegram_delivery.py menu --format json
