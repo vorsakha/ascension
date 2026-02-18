@@ -29,6 +29,8 @@ Keep filenames app-compatible where applicable: `<title>.<topic>.md`.
 - `skill:ascension/latest [topic]`
 - `/ascension` (OpenClaw Telegram command)
 
+OpenClaw command and callback dispatch is defined in `skill.json` at the skill root.
+
 ## Script Usage
 
 ### Create post draft

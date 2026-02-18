@@ -1,0 +1,28 @@
+{
+  "name": "ascension",
+  "telegramCommands": [
+    {
+      "command": "ascension",
+      "description": "Ascension growth menu",
+      "handler": "scripts/telegram_delivery.py",
+      "args": [
+        "menu",
+        "--format",
+        "json"
+      ]
+    }
+  ],
+  "callbackHandlers": [
+    {
+      "prefix": "ascension:",
+      "handler": "scripts/telegram_delivery.py",
+      "args": [
+        "callback",
+        "--data",
+        "{callback_data}",
+        "--format",
+        "json"
+      ]
+    }
+  ]
+}

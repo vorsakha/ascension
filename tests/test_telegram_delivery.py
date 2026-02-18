@@ -89,6 +89,17 @@ class TelegramDeliveryTests(unittest.TestCase):
         self.assertIsNone(td.resolve_callback_action("ascension:unknown"))
         self.assertIsNone(td.resolve_callback_action("ascension:list:music:not-a-number"))
 
+    def test_latest_payload_uses_real_newlines(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.create_post(root, "entry", "ascension_journal", "First line\nSecond line", 1_700_004_000)
+            items = td.collect_items(root)
+
+            payload = td.latest_payload(items, "ascension_journal")
+            text = payload["text"]
+            self.assertIn("Ascension Journal\nTitle:", text)
+            self.assertNotIn("\\n", text)
+
 
 if __name__ == "__main__":
     unittest.main()

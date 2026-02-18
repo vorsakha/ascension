@@ -304,10 +304,10 @@ def latest_payload(items: list[ContentItem], topic: str) -> dict[str, Any]:
     excerpt = read_excerpt(item.path)
     stamp = item.mtime_utc.strftime("%Y-%m-%d %H:%M UTC")
     text = (
-        f"Ascension {label}\\n"
-        f"Title: {item.title}\\n"
-        f"Updated: {stamp}\\n"
-        f"Path: content/public/{item.rel_path.as_posix()}\\n\\n"
+        f"Ascension {label}\n"
+        f"Title: {item.title}\n"
+        f"Updated: {stamp}\n"
+        f"Path: content/public/{item.rel_path.as_posix()}\n\n"
         f"{excerpt}"
     )
 

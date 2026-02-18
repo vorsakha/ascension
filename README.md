@@ -149,6 +149,8 @@ Configure OpenClaw command dispatch so Telegram `/ascension` deterministically r
 1. `python3 scripts/telegram_delivery.py menu --format json` for initial command.
 2. `python3 scripts/telegram_delivery.py callback --data <callback_data> --format json` for inline button taps.
 
+This repository declares that binding in `skill.json`.
+
 Keep access control on OpenClaw allowlisted users.
 
 ## Safety
