@@ -282,8 +282,8 @@ def post_payload(items: list[ContentItem], post_id: str, return_page: int = 1) -
     # Get current page for navigation
     topic_items = items_for_topic(items, item.topic)
     current_index = topic_items.index(item)
-    current_page = (current_index // POSTS_PER_PAGE) + 1
-    total_pages = (len(topic_items) + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+    current_page = (current_index // PAGE_SIZE) + 1
+    total_pages = (len(topic_items) + PAGE_SIZE - 1) // PAGE_SIZE
     
     # Build navigation keyboard
     keyboard = {"inline_keyboard": []}
@@ -303,9 +303,6 @@ def post_payload(items: list[ContentItem], post_id: str, return_page: int = 1) -
     # Add "Back to topics" button on its own row
     keyboard["inline_keyboard"].append(row)
     keyboard["inline_keyboard"].append([{"text": "Back to topics", "callback_data": "ascension:menu"}])
-    
-    if chunks:
-        keyboard["inline_keyboard"].append([{"text": "Back to list", "callback_data": f"ascension:list:{item.topic}:{return_page}"}])
     if len(chunks) == 1:
         return {"text": chunks[0], "reply_markup": keyboard}
 
