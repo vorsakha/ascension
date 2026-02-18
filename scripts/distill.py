@@ -5,32 +5,33 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import re
 import sys
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
 
 
 def resolve_workspace_root() -> Path:
-    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
-        if (candidate / "content").exists():
-            return candidate.resolve()
-    return WORKSPACE_FALLBACK.resolve()
+    for key in ("ASCENSION_WORKSPACE", "OPENCLAW_WORKSPACE"):
+        raw = os.environ.get(key, "").strip()
+        if raw:
+            return Path(raw).expanduser().resolve()
+    return (Path.home() / ".openclaw" / "workspace").resolve()
 
 
-WORKSPACE_ROOT = resolve_workspace_root()
-CONTENT_ROOT = (WORKSPACE_ROOT / "content").resolve()
-PRIVATE_ROOT = (CONTENT_ROOT / "private").resolve()
-PRIVATE_MEMORY_PATH = (PRIVATE_ROOT / "PRIVATE_MEMORY.md").resolve()
+OPENCLAW_WORKSPACE = resolve_workspace_root()
+ASCENSION_CONTENT_ROOT = (OPENCLAW_WORKSPACE / "ascension").resolve()
+PRIVATE_ROOT = (ASCENSION_CONTENT_ROOT / "private").resolve()
+PRIVATE_MEMORY_PATH = (OPENCLAW_WORKSPACE / "PRIVATE_MEMORY.md").resolve()
 
 CONFIDENCE_LEVELS = ("low", "medium", "high")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Distill a private journal into content/private/PRIVATE_MEMORY.md."
+        description="Distill a private journal into <workspace>/PRIVATE_MEMORY.md."
     )
     parser.add_argument("private_file", help="Source private journal path")
     mode_group = parser.add_mutually_exclusive_group()
@@ -53,11 +54,16 @@ def resolve_input_path(raw: str) -> Path:
         return candidate.resolve()
 
     text = raw.strip().lstrip("./")
+    if text.startswith("content/"):
+        raise SystemExit(
+            "Legacy 'content/...' paths are unsupported. Use "
+            "'<workspace>/ascension/...' or 'private/...'. "
+            "Workspace comes from $ASCENSION_WORKSPACE, then $OPENCLAW_WORKSPACE, "
+            "defaulting to $HOME/.openclaw/workspace."
+        )
     if text.startswith("private/"):
-        return (CONTENT_ROOT / text).resolve()
-    if text.startswith("content/private/"):
-        return (WORKSPACE_ROOT / text).resolve()
-    return (WORKSPACE_ROOT / candidate).resolve()
+        return (ASCENSION_CONTENT_ROOT / text).resolve()
+    return candidate.resolve()
 
 
 def ensure_under(path: Path, base: Path, label: str) -> None:
@@ -200,7 +206,7 @@ def extract_fields(path: Path, body: str, title_override: str | None, confidence
     title = title_override.strip() if title_override else infer_title(path, realization or cue)
     confidence = confidence_override or "medium"
     tags = parse_tags(tags_override, body)
-    rel_source = path.relative_to(WORKSPACE_ROOT).as_posix()
+    rel_source = path.relative_to(OPENCLAW_WORKSPACE).as_posix()
     return {
         "date": date_from_path(path),
         "title": title,

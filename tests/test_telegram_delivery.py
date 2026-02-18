@@ -71,6 +71,7 @@ class TelegramDeliveryTests(unittest.TestCase):
 
             self.assertIn("Title: Alpha", payload["text"])
             self.assertIn("Line A", payload["text"])
+            self.assertIn("Path: ascension/public/alpha.ascension_x.md", payload["text"])
             self.assertIn("ascension:list:ascension_x:1", str(payload["reply_markup"]))
 
     def test_long_post_splits_into_messages_envelope(self):
@@ -98,6 +99,7 @@ class TelegramDeliveryTests(unittest.TestCase):
             payload = td.latest_payload(items, "ascension_journal")
             text = payload["text"]
             self.assertIn("Ascension Journal\nTitle:", text)
+            self.assertIn("Path: ascension/public/entry.ascension_journal.md", text)
             self.assertNotIn("\\n", text)
 
 

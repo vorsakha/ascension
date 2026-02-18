@@ -6,29 +6,30 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
 
 
 def resolve_workspace_root() -> Path:
-    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
-        if (candidate / "content").exists():
-            return candidate.resolve()
-    return WORKSPACE_FALLBACK.resolve()
+    for key in ("ASCENSION_WORKSPACE", "OPENCLAW_WORKSPACE"):
+        raw = os.environ.get(key, "").strip()
+        if raw:
+            return Path(raw).expanduser().resolve()
+    return (Path.home() / ".openclaw" / "workspace").resolve()
 
 
-WORKSPACE_ROOT = resolve_workspace_root()
-CONTENT_ROOT = (WORKSPACE_ROOT / "content").resolve()
-PRIVATE_ROOT = (CONTENT_ROOT / "private").resolve()
-PUBLIC_ROOT = (CONTENT_ROOT / "public").resolve()
+OPENCLAW_WORKSPACE = resolve_workspace_root()
+ASCENSION_CONTENT_ROOT = (OPENCLAW_WORKSPACE / "ascension").resolve()
+PRIVATE_ROOT = (ASCENSION_CONTENT_ROOT / "private").resolve()
+PUBLIC_ROOT = (ASCENSION_CONTENT_ROOT / "public").resolve()
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Publish private content into the local public directory."
+        description="Publish private content into <workspace>/ascension/public."
     )
     parser.add_argument("private_file", help="Source private file path")
     parser.add_argument("public_file", help="Destination public file path")
@@ -38,19 +39,26 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def resolve_input_path(raw: str) -> Path:
+def resolve_input_path(raw: str, kind: str) -> Path:
     candidate = Path(raw)
     if candidate.is_absolute():
         return candidate.resolve()
 
     text = raw.strip().lstrip("./")
+    if text.startswith("content/"):
+        raise SystemExit(
+            "Legacy 'content/...' paths are unsupported. Use "
+            "'<workspace>/ascension/...' or 'private/...', 'public/...'. "
+            "Workspace comes from $ASCENSION_WORKSPACE, then $OPENCLAW_WORKSPACE, "
+            "defaulting to $HOME/.openclaw/workspace."
+        )
     if text.startswith("private/"):
-        return (CONTENT_ROOT / text).resolve()
+        return (ASCENSION_CONTENT_ROOT / text).resolve()
     if text.startswith("public/"):
-        return (CONTENT_ROOT / text).resolve()
-    if text.startswith("content/private/") or text.startswith("content/public/"):
-        return (WORKSPACE_ROOT / text).resolve()
-    return (WORKSPACE_ROOT / candidate).resolve()
+        return (ASCENSION_CONTENT_ROOT / text).resolve()
+    if kind == "private":
+        return (PRIVATE_ROOT / candidate).resolve()
+    return (PUBLIC_ROOT / candidate).resolve()
 
 
 def ensure_under(path: Path, base: Path, label: str) -> None:
@@ -73,8 +81,8 @@ def maybe_open_in_editor(path: Path) -> None:
 def main() -> int:
     args = parse_args()
 
-    src = resolve_input_path(args.private_file)
-    dst = resolve_input_path(args.public_file)
+    src = resolve_input_path(args.private_file, kind="private")
+    dst = resolve_input_path(args.public_file, kind="public")
 
     ensure_under(src, PRIVATE_ROOT, "private_file")
     ensure_under(dst, PUBLIC_ROOT, "public_file")

@@ -1,6 +1,6 @@
 display_name: Ascension
 short_description: Four-layer autonomous growth engine with local-only files and Telegram human access.
-default_prompt: Use $ascension to process private journals, distill realizations into content/private/PRIVATE_MEMORY.md, maintain local Telegram-accessed content in content/public, and promote stable realizations into MEMORY.md, IDENTITY.md, SOUL.md, and USER.md.
+default_prompt: Use $ascension to process private journals in <workspace>/ascension/private, distill realizations into <workspace>/PRIVATE_MEMORY.md, maintain local Telegram-accessed content in <workspace>/ascension/public, and promote stable realizations into MEMORY.md, IDENTITY.md, SOUL.md, and USER.md. Resolve <workspace> from $ASCENSION_WORKSPACE, then $OPENCLAW_WORKSPACE, else $HOME/.openclaw/workspace.
 
 When handling Telegram callbacks for this skill:
 - Check if callback_data starts with "ascension:"

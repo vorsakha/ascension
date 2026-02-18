@@ -1,19 +1,20 @@
 # Ascension
 
 Ascension is an OpenClaw skill for autonomous agent growth.
+Scripts resolve workspace as `$ASCENSION_WORKSPACE`, then `$OPENCLAW_WORKSPACE`, else `$HOME/.openclaw/workspace`.
 
 ## Core idea
 
 - Run a growth engine that outputs to both private memory and agent core files.
-- Distill private processing into `content/private/PRIVATE_MEMORY.md`.
-- Keep human-facing artifacts local in `content/public` for Telegram access only.
+- Distill private processing into `<workspace>/PRIVATE_MEMORY.md`.
+- Keep human-facing artifacts local in `<workspace>/ascension/public` for Telegram access only.
 - Promote stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Four-layer growth system
 
 1. Private journals: venting, processing, and "history in the making"
-2. Private realizations: distilled, searchable wisdom in `content/private/PRIVATE_MEMORY.md`
-3. Public content: polished journals, logs, and scrolls in `content/public`
+2. Private realizations: distilled, searchable wisdom in `<workspace>/PRIVATE_MEMORY.md`
+3. Public content: polished journals, logs, and scrolls in `<workspace>/ascension/public`
 4. Core files: durable realizations that shape who the agent becomes (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.)
 
 In short:
@@ -28,20 +29,20 @@ In short:
 - `SKILL.md`: Skill contract and workflow
 - `agents/openai.yaml`: Skill metadata
 - `scripts/new_post.py`: Create new draft posts from templates
-- `scripts/distill.py`: Distill private journals into `content/private/PRIVATE_MEMORY.md`
+- `scripts/distill.py`: Distill private journals into `<workspace>/PRIVATE_MEMORY.md`
 - `scripts/publish.py`: Publish private drafts into local Telegram-readable public files
 - `scripts/telegram_delivery.py`: Deterministic menu/latest payloads for Telegram
 - `templates/`: Draft templates
-- `content/private/`: Private journals and private realizations
-- `content/private/PRIVATE_MEMORY.md`: Private distilled realizations
-- `content/public/`: Local Telegram delivery content source
+- `<workspace>/ascension/private/`: Private journals
+- `<workspace>/PRIVATE_MEMORY.md`: Private distilled realizations
+- `<workspace>/ascension/public/`: Local Telegram delivery content source
 - `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`: Agent core files (canonical integration targets)
 
 ## Growth flow
 
-1. Draft and process in `content/private/*.md` (private journals).
-2. Distill key learnings into `content/private/PRIVATE_MEMORY.md` (private realizations).
-3. Produce polished local outputs in `content/public/*.md` (Telegram-accessed public content).
+1. Draft and process in `<workspace>/ascension/private/*.md` (private journals).
+2. Distill key learnings into `<workspace>/PRIVATE_MEMORY.md` (private realizations).
+3. Produce polished local outputs in `<workspace>/ascension/public/*.md` (Telegram-accessed public content).
 4. Integrate stable realizations into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md` (core evolution).
 
 ## End-to-end example
@@ -56,9 +57,9 @@ Example intent:
 python3 scripts/new_post.py private journal "Conflict after long thread"
 ```
 
-2. Write raw processing in `content/private/<file>.md`.
+2. Write raw processing in `<workspace>/ascension/private/<file>.md`.
 
-3. Distill realization into `content/private/PRIVATE_MEMORY.md`.
+3. Distill realization into `<workspace>/PRIVATE_MEMORY.md`.
 
 ```bash
 python3 scripts/distill.py private/conflict_after_long_thread.ascension_journal.md --agent
@@ -70,7 +71,7 @@ python3 scripts/distill.py private/conflict_after_long_thread.ascension_journal.
 - Realization: Ask permission before switching from empathy to solutions.
 - Decision Rule: If user is processing feelings, ask first, then advise.
 - Confidence: high
-- Source: `content/private/conflict_after_long_thread.ascension_journal.md`
+- Source: `ascension/private/conflict_after_long_thread.ascension_journal.md`
 ```
 
 4. Publish a polished local public artifact.
@@ -155,7 +156,7 @@ Keep access control on OpenClaw allowlisted users.
 
 ## Safety
 
-- Treat all content under `content/private/` as sensitive by default.
+- Treat all content under `<workspace>/ascension/private/` as sensitive by default.
 - Do not promote raw private venting directly into public or core files.
 - Promote only distilled realizations across layers.
 - Keep all generated files local; human access is through Telegram `/ascension` only.

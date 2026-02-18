@@ -5,23 +5,25 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import re
 import sys
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
 TEMPLATES_DIR = SKILL_ROOT / "templates"
 
 
 def resolve_workspace_root() -> Path:
-    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
-        if (candidate / "content").exists():
-            return candidate.resolve()
-    return WORKSPACE_FALLBACK.resolve()
+    for key in ("ASCENSION_WORKSPACE", "OPENCLAW_WORKSPACE"):
+        raw = os.environ.get(key, "").strip()
+        if raw:
+            return Path(raw).expanduser().resolve()
+    return (Path.home() / ".openclaw" / "workspace").resolve()
 
 
-CONTENT_DIR = resolve_workspace_root() / "content"
+OPENCLAW_WORKSPACE = resolve_workspace_root()
+ASCENSION_CONTENT_ROOT = (OPENCLAW_WORKSPACE / "ascension").resolve()
 
 PUBLIC_TYPES = {"journal", "music_log", "twitter_scroll"}
 PRIVATE_TYPES = {"journal"}
@@ -121,18 +123,18 @@ def main() -> int:
     template = resolve_template(args.visibility, post_type)
     filename, _ = build_filename(args.visibility, post_type, date, args.title)
 
-    target_dir = CONTENT_DIR / args.visibility
-    target_dir.mkdir(parents=True, exist_ok=True)
+    target_dir = ASCENSION_CONTENT_ROOT / args.visibility
     target = target_dir / filename
-
-    if target.exists() and not args.force:
-        raise SystemExit(f"Refusing to overwrite existing file: {target}. Use --force to overwrite.")
 
     body = render_template(template, date, args.title)
 
     if args.dry_run:
         print(f"[dry-run] Would create: {target}")
         return 0
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    if target.exists() and not args.force:
+        raise SystemExit(f"Refusing to overwrite existing file: {target}. Use --force to overwrite.")
 
     target.write_text(body, encoding="utf-8")
     print(f"Created: {target}")

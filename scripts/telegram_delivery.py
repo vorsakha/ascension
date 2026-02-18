@@ -8,6 +8,7 @@ import datetime as dt
 import hashlib
 import json
 import math
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -15,7 +16,18 @@ from pathlib import Path
 from typing import Any
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
+
+
+def resolve_workspace_root() -> Path:
+    for key in ("ASCENSION_WORKSPACE", "OPENCLAW_WORKSPACE"):
+        raw = os.environ.get(key, "").strip()
+        if raw:
+            return Path(raw).expanduser().resolve()
+    return (Path.home() / ".openclaw" / "workspace").resolve()
+
+
+OPENCLAW_WORKSPACE = resolve_workspace_root()
+DEFAULT_PUBLIC_ROOT = (OPENCLAW_WORKSPACE / "ascension" / "public").resolve()
 
 ALLOWED_EXTENSIONS = {"md"}
 TOPIC_LABELS = {
@@ -45,13 +57,6 @@ class ContentItem:
     ext: str
     mtime_utc: dt.datetime
     post_id: str
-
-
-def resolve_workspace_root() -> Path:
-    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
-        if (candidate / "content").exists():
-            return candidate.resolve()
-    return WORKSPACE_FALLBACK.resolve()
 
 
 def humanize(text: str) -> str:
@@ -274,7 +279,7 @@ def post_payload(items: list[ContentItem], post_id: str, return_page: int = 1) -
     text = (
         f"Title: {item.title}\n"
         f"Updated: {stamp}\n"
-        f"Path: content/public/{item.rel_path.as_posix()}\n\n"
+        f"Path: ascension/public/{item.rel_path.as_posix()}\n\n"
         f"{body}"
     )
     chunks = split_text_for_telegram(text)
@@ -326,7 +331,7 @@ def latest_payload(items: list[ContentItem], topic: str) -> dict[str, Any]:
         f"Ascension {label}\n"
         f"Title: {item.title}\n"
         f"Updated: {stamp}\n"
-        f"Path: content/public/{item.rel_path.as_posix()}\n\n"
+        f"Path: ascension/public/{item.rel_path.as_posix()}\n\n"
         f"{excerpt}"
     )
 
@@ -409,23 +414,23 @@ def parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     menu_parser = subparsers.add_parser("menu", help="Return topic menu payload")
-    menu_parser.add_argument("--content-root", help="Override content/public root path")
+    menu_parser.add_argument("--content-root", help="Override <workspace>/ascension/public root path")
     menu_parser.add_argument("--format", choices=["text", "json"], default="text")
 
     latest_parser = subparsers.add_parser("latest", help="Return latest payload for a topic")
     latest_parser.add_argument("--topic", required=True, help="Topic alias or canonical topic")
-    latest_parser.add_argument("--content-root", help="Override content/public root path")
+    latest_parser.add_argument("--content-root", help="Override <workspace>/ascension/public root path")
     latest_parser.add_argument("--format", choices=["text", "json"], default="text")
 
     list_parser = subparsers.add_parser("list", help="Return paginated post list for a topic")
     list_parser.add_argument("--topic", required=True, help="Topic alias or canonical topic")
     list_parser.add_argument("--page", type=int, default=1, help="1-based page number")
-    list_parser.add_argument("--content-root", help="Override content/public root path")
+    list_parser.add_argument("--content-root", help="Override <workspace>/ascension/public root path")
     list_parser.add_argument("--format", choices=["text", "json"], default="text")
 
     callback_parser = subparsers.add_parser("callback", help="Resolve Telegram callback data")
     callback_parser.add_argument("--data", required=True, help="Callback payload string")
-    callback_parser.add_argument("--content-root", help="Override content/public root path")
+    callback_parser.add_argument("--content-root", help="Override <workspace>/ascension/public root path")
     callback_parser.add_argument("--format", choices=["text", "json"], default="text")
 
     return parser.parse_args()
@@ -434,11 +439,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    workspace_root = resolve_workspace_root()
     content_root = (
         Path(args.content_root).resolve()
         if args.content_root
-        else (workspace_root / "content" / "public")
+        else DEFAULT_PUBLIC_ROOT
     )
 
     items = collect_items(content_root)

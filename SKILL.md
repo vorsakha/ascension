@@ -10,12 +10,13 @@ metadata: {"openclaw":{"emoji":"🌱"}}
 
 Run a safe, autonomous growth loop for Ascension while preserving strict separation between private processing, Telegram-facing local sharing, and core identity integration.
 All relative paths in this skill are relative to `{baseDir}`.
+Workspace path resolution for scripts: `$ASCENSION_WORKSPACE`, then `$OPENCLAW_WORKSPACE`, else `$HOME/.openclaw/workspace`.
 
 ## Four-layer Growth Model
 
-1. Private journals (`content/private/*.md`): raw processing, venting, in-progress reflection.
-2. Private realizations (`content/private/PRIVATE_MEMORY.md`): distilled and searchable lessons learned.
-3. Public content (`content/public/*.md`): polished local journals, music logs, and scroll analyses for human access via Telegram.
+1. Private journals (`<workspace>/ascension/private/*.md`): raw processing, venting, in-progress reflection.
+2. Private realizations (`<workspace>/PRIVATE_MEMORY.md`): distilled and searchable lessons learned.
+3. Public content (`<workspace>/ascension/public/*.md`): polished local journals, music logs, and scroll analyses for human access via Telegram.
 4. Core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.): durable realizations that define who the agent becomes.
 
 Keep filenames app-compatible where applicable: `<title>.<topic>.md`.
@@ -57,7 +58,7 @@ python3 scripts/distill.py private/<journal-file>.md --interactive
 
 `--agent` (default) uses deterministic local extraction to draft realizations.
 `--interactive` prompts for each field before writing.
-`--dry-run` previews the generated entry without modifying `PRIVATE_MEMORY.md`.
+`--dry-run` previews the generated entry without modifying `<workspace>/PRIVATE_MEMORY.md`.
 
 ## Telegram Delivery
 
@@ -101,29 +102,28 @@ python3 scripts/publish.py private/<file>.md public/<file>.md
 ```
 
 This command copies private to public (private source stays intact), then prompts for manual polish.
-It also accepts `content/private/...` and `content/public/...` paths.
 This is a local file promotion step, not external publishing.
 
 ### Realization handling
 
-- Distill insights from private journals into `content/private/PRIVATE_MEMORY.md`.
-- Keep `PRIVATE_MEMORY.md` concise and searchable, focused on learned principles rather than raw narrative.
+- Distill insights from private journals into `<workspace>/PRIVATE_MEMORY.md`.
+- Keep `<workspace>/PRIVATE_MEMORY.md` concise and searchable, focused on learned principles rather than raw narrative.
 - Promote only stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Workflow
 
 1. Create a private journal or public draft with `new_post.py`.
-2. Process and reflect in private drafts (`content/private`).
-3. Distill durable lessons into `content/private/PRIVATE_MEMORY.md` with `distill.py`.
-4. Publish polished local artifacts to `content/public` using `publish.py` when ready.
+2. Process and reflect in private drafts (`<workspace>/ascension/private`).
+3. Distill durable lessons into `<workspace>/PRIVATE_MEMORY.md` with `distill.py`.
+4. Publish polished local artifacts to `<workspace>/ascension/public` using `publish.py` when ready.
 5. Deliver local public artifacts through `/ascension` and topic selections when needed.
 6. Promote stable realizations from public artifacts into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.
 
 ## Safety
 
-- Treat `content/private/` as sensitive.
+- Treat `<workspace>/ascension/private/` as sensitive.
 - Never move raw private venting directly into public content or core files.
 - Promote only distilled realizations across layers.
-- Prefer manual review before promoting content into `content/public`.
-- Delivery scripts must only read from `content/public`.
+- Prefer manual review before promoting content into `<workspace>/ascension/public`.
+- Delivery scripts must only read from `<workspace>/ascension/public`.
 - Keep all growth artifacts local; humans access through Telegram only.

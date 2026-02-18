@@ -17,7 +17,7 @@
 - Confidence: [low | medium | high]
 - Scope: [where this applies / where it does not]
 - Next Action: [single concrete step]
-- Source: `content/private/<journal-file>.md`
+- Source: `ascension/private/<journal-file>.md`
 - Tags: `tag-one`, `tag-two`
 
 ## Index (Optional)
