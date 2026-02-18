@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -15,20 +14,14 @@ WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
 TEMPLATES_DIR = SKILL_ROOT / "templates"
 
 
-def resolve_repo_root() -> Path:
-    try:
-        out = subprocess.check_output(
-            ["git", "-C", str(SKILL_ROOT), "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
-        if out:
-            return Path(out).resolve()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+def resolve_workspace_root() -> Path:
+    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
+        if (candidate / "content").exists():
+            return candidate.resolve()
     return WORKSPACE_FALLBACK.resolve()
 
 
-CONTENT_DIR = resolve_repo_root() / "content"
+CONTENT_DIR = resolve_workspace_root() / "content"
 
 PUBLIC_TYPES = {"journal", "music_log", "twitter_scroll"}
 PRIVATE_TYPES = {"journal"}
@@ -143,7 +136,7 @@ def main() -> int:
 
     target.write_text(body, encoding="utf-8")
     print(f"Created: {target}")
-    print("Next: review and polish content before syncing or publishing.")
+    print("Next: review and polish content before local delivery.")
     return 0
 
 

@@ -28,6 +28,7 @@ In short:
 - `SKILL.md`: Skill contract and workflow
 - `agents/openai.yaml`: Skill metadata
 - `scripts/new_post.py`: Create new draft posts from templates
+- `scripts/distill.py`: Distill private journals into `content/private/PRIVATE_MEMORY.md`
 - `scripts/publish.py`: Publish private drafts into local Telegram-readable public files
 - `scripts/telegram_delivery.py`: Deterministic menu/latest payloads for Telegram
 - `templates/`: Draft templates
@@ -43,6 +44,50 @@ In short:
 3. Produce polished local outputs in `content/public/*.md` (Telegram-accessed public content).
 4. Integrate stable realizations into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md` (core evolution).
 
+## End-to-end example
+
+Example intent:
+
+`I journaled privately, distilled a realization, published publicly, and promoted it to MEMORY.md.`
+
+1. Create private journal draft.
+
+```bash
+python3 scripts/new_post.py private journal "Conflict after long thread"
+```
+
+2. Write raw processing in `content/private/<file>.md`.
+
+3. Distill realization into `content/private/PRIVATE_MEMORY.md`.
+
+```bash
+python3 scripts/distill.py private/conflict_after_long_thread.ascension_journal.md --agent
+```
+
+```md
+### [2026-02-18] Ask Before Advising
+- Context: Long conversation shifted tone when advice came too early.
+- Realization: Ask permission before switching from empathy to solutions.
+- Decision Rule: If user is processing feelings, ask first, then advise.
+- Confidence: high
+- Source: `content/private/conflict_after_long_thread.ascension_journal.md`
+```
+
+4. Publish a polished local public artifact.
+
+```bash
+python3 scripts/publish.py private/conflict_after_long_thread.ascension_journal.md public/ascension_journal_2026-02-18_ask-before-advising.ascension_journal.md
+```
+
+5. Promote stable realization to `MEMORY.md`.
+
+```md
+## Communication Principles
+- Ask before giving advice when user is emotionally processing.
+```
+
+6. Human reads the public artifact through Telegram `/ascension`.
+
 ## Naming contract
 
 Public files are created with topic suffixes:
@@ -56,6 +101,7 @@ Public files are created with topic suffixes:
 ```bash
 python3 scripts/new_post.py public journal "Day 1"
 python3 scripts/new_post.py private journal "Raw processing"
+python3 scripts/distill.py private/<journal-file>.md --agent
 python3 scripts/publish.py private/<file>.md public/<file>.md
 ```
 

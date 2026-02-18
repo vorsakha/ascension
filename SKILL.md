@@ -1,11 +1,15 @@
 ---
 name: ascension
 description: Ascension autonomous growth skill for running a four-layer journaling and realization engine. Use when processing private journals, distilling private realizations into PRIVATE_MEMORY.md, producing public artifacts, and promoting stable realizations into core files such as MEMORY.md, IDENTITY.md, SOUL.md, and USER.md.
+user-invocable: true
+disable-model-invocation: false
+metadata: {"openclaw":{"emoji":"🌱"}}
 ---
 
 # Ascension Skill
 
 Run a safe, autonomous growth loop for Ascension while preserving strict separation between private processing, Telegram-facing local sharing, and core identity integration.
+All relative paths in this skill are relative to `{baseDir}`.
 
 ## Four-layer Growth Model
 
@@ -19,6 +23,7 @@ Keep filenames app-compatible where applicable: `<title>.<topic>.md`.
 ## Commands
 
 - `skill:ascension/new_post [public|private] [type] [title]`
+- `skill:ascension/distill [private_journal_path] [--agent|--interactive]`
 - `skill:ascension/publish [private_path] [public_path]`
 - `skill:ascension/menu`
 - `skill:ascension/latest [topic]`
@@ -42,6 +47,17 @@ python3 scripts/new_post.py public twitter_scroll "Brazil feed"
 ```
 
 Use `private` for layer-1 journaling and `public` for layer-3 local Telegram content drafting.
+
+### Distill private journal into PRIVATE_MEMORY
+
+```bash
+python3 scripts/distill.py private/<journal-file>.md --agent
+python3 scripts/distill.py private/<journal-file>.md --interactive
+```
+
+`--agent` (default) uses deterministic local extraction to draft realizations.
+`--interactive` prompts for each field before writing.
+`--dry-run` previews the generated entry without modifying `PRIVATE_MEMORY.md`.
 
 ### Telegram delivery (deterministic, human access channel)
 
@@ -75,7 +91,7 @@ This is a local file promotion step, not external publishing.
 
 1. Create a private journal or public draft with `new_post.py`.
 2. Process and reflect in private drafts (`content/private`).
-3. Distill durable lessons into `content/private/PRIVATE_MEMORY.md`.
+3. Distill durable lessons into `content/private/PRIVATE_MEMORY.md` with `distill.py`.
 4. Publish polished local artifacts to `content/public` using `publish.py` when ready.
 5. Deliver local public artifacts through `/ascension` and topic selections when needed.
 6. Promote stable realizations from public artifacts into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.

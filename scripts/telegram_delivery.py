@@ -7,7 +7,6 @@ import argparse
 import datetime as dt
 import json
 import re
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,16 +42,10 @@ class ContentItem:
     mtime_utc: dt.datetime
 
 
-def resolve_repo_root() -> Path:
-    try:
-        out = subprocess.check_output(
-            ["git", "-C", str(SKILL_ROOT), "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
-        if out:
-            return Path(out).resolve()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+def resolve_workspace_root() -> Path:
+    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
+        if (candidate / "content").exists():
+            return candidate.resolve()
     return WORKSPACE_FALLBACK.resolve()
 
 
@@ -239,8 +232,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    repo_root = resolve_repo_root()
-    content_root = Path(args.content_root).resolve() if args.content_root else (repo_root / "content" / "public")
+    workspace_root = resolve_workspace_root()
+    content_root = (
+        Path(args.content_root).resolve()
+        if args.content_root
+        else (workspace_root / "content" / "public")
+    )
 
     items = collect_items(content_root)
 

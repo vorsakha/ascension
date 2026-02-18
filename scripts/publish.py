@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -14,21 +13,15 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
 
 
-def resolve_repo_root() -> Path:
-    try:
-        out = subprocess.check_output(
-            ["git", "-C", str(SKILL_ROOT), "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
-        if out:
-            return Path(out).resolve()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+def resolve_workspace_root() -> Path:
+    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
+        if (candidate / "content").exists():
+            return candidate.resolve()
     return WORKSPACE_FALLBACK.resolve()
 
 
-REPO_ROOT = resolve_repo_root()
-CONTENT_ROOT = (REPO_ROOT / "content").resolve()
+WORKSPACE_ROOT = resolve_workspace_root()
+CONTENT_ROOT = (WORKSPACE_ROOT / "content").resolve()
 PRIVATE_ROOT = (CONTENT_ROOT / "private").resolve()
 PUBLIC_ROOT = (CONTENT_ROOT / "public").resolve()
 
@@ -56,8 +49,8 @@ def resolve_input_path(raw: str) -> Path:
     if text.startswith("public/"):
         return (CONTENT_ROOT / text).resolve()
     if text.startswith("content/private/") or text.startswith("content/public/"):
-        return (REPO_ROOT / text).resolve()
-    return (REPO_ROOT / candidate).resolve()
+        return (WORKSPACE_ROOT / text).resolve()
+    return (WORKSPACE_ROOT / candidate).resolve()
 
 
 def ensure_under(path: Path, base: Path, label: str) -> None:

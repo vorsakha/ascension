@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+"""Distill a private journal into PRIVATE_MEMORY.md."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import re
+import sys
+from pathlib import Path
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+WORKSPACE_FALLBACK = SKILL_ROOT.parents[1]
+
+
+def resolve_workspace_root() -> Path:
+    for candidate in (SKILL_ROOT, *SKILL_ROOT.parents):
+        if (candidate / "content").exists():
+            return candidate.resolve()
+    return WORKSPACE_FALLBACK.resolve()
+
+
+WORKSPACE_ROOT = resolve_workspace_root()
+CONTENT_ROOT = (WORKSPACE_ROOT / "content").resolve()
+PRIVATE_ROOT = (CONTENT_ROOT / "private").resolve()
+PRIVATE_MEMORY_PATH = (PRIVATE_ROOT / "PRIVATE_MEMORY.md").resolve()
+
+CONFIDENCE_LEVELS = ("low", "medium", "high")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Distill a private journal into content/private/PRIVATE_MEMORY.md."
+    )
+    parser.add_argument("private_file", help="Source private journal path")
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--agent", action="store_true", help="Use deterministic extraction (default)")
+    mode_group.add_argument("--interactive", action="store_true", help="Prompt to confirm/edit fields")
+    parser.add_argument("--title", help="Override realization title")
+    parser.add_argument(
+        "--confidence",
+        choices=CONFIDENCE_LEVELS,
+        help="Override confidence level",
+    )
+    parser.add_argument("--tags", help="Comma-separated tags, e.g. communication,empathy")
+    parser.add_argument("--dry-run", action="store_true", help="Show generated entry without writing")
+    return parser.parse_args()
+
+
+def resolve_input_path(raw: str) -> Path:
+    candidate = Path(raw)
+    if candidate.is_absolute():
+        return candidate.resolve()
+
+    text = raw.strip().lstrip("./")
+    if text.startswith("private/"):
+        return (CONTENT_ROOT / text).resolve()
+    if text.startswith("content/private/"):
+        return (WORKSPACE_ROOT / text).resolve()
+    return (WORKSPACE_ROOT / candidate).resolve()
+
+
+def ensure_under(path: Path, base: Path, label: str) -> None:
+    if not path.is_relative_to(base):
+        raise SystemExit(f"{label} must be under {base}; got {path}")
+
+
+def normalize_space(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def title_case(text: str) -> str:
+    return " ".join(part.capitalize() for part in re.split(r"[\s_-]+", text.strip()) if part)
+
+
+def split_sentences(text: str) -> list[str]:
+    plain = re.sub(r"[`*_>#-]", " ", text)
+    plain = re.sub(r"\s+", " ", plain).strip()
+    if not plain:
+        return []
+    chunks = re.split(r"(?<=[.!?])\s+", plain)
+    return [c.strip() for c in chunks if c.strip()]
+
+
+def extract_sections(body: str) -> dict[str, list[str]]:
+    sections: dict[str, list[str]] = {}
+    current = "__root__"
+    sections[current] = []
+    for line in body.splitlines():
+        heading_match = re.match(r"^\s{0,3}##\s+(.+?)\s*$", line)
+        if heading_match:
+            current = heading_match.group(1).strip().lower()
+            sections.setdefault(current, [])
+            continue
+        sections.setdefault(current, []).append(line)
+    return sections
+
+
+def first_nonempty_paragraph(body: str) -> str:
+    lines = []
+    for raw in body.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            if lines:
+                break
+            continue
+        lines.append(line)
+    return normalize_space(" ".join(lines))
+
+
+def first_nonempty_line(lines: list[str]) -> str:
+    for line in lines:
+        candidate = normalize_space(line)
+        if candidate:
+            return candidate
+    return ""
+
+
+def cue_sentences(body: str) -> list[str]:
+    cues = ("learned", "realized", "pattern", "should", "next time", "need to", "if ", "then ")
+    sentences = split_sentences(body)
+    ranked = [s for s in sentences if any(c in s.lower() for c in cues)]
+    return ranked if ranked else sentences
+
+
+def date_from_path(path: Path) -> str:
+    match = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", path.name)
+    if match:
+        return match.group(1)
+    return dt.date.today().isoformat()
+
+
+def infer_title(path: Path, cue: str) -> str:
+    if cue:
+        words = re.findall(r"[A-Za-z0-9]+", cue)[:6]
+        if words:
+            return title_case(" ".join(words))
+    stem = path.stem.split(".")[0]
+    return title_case(stem[:60]) or "Journal Distillation"
+
+
+def infer_tags(text: str) -> list[str]:
+    tags = ["journal", "distilled"]
+    lower = text.lower()
+    mappings = [
+        ("communicat", "communication"),
+        ("emotion", "emotional-processing"),
+        ("trust", "trust"),
+        ("boundar", "boundaries"),
+        ("conflict", "conflict"),
+        ("reflect", "reflection"),
+    ]
+    for needle, tag in mappings:
+        if needle in lower and tag not in tags:
+            tags.append(tag)
+    return tags
+
+
+def as_decision_rule(realization: str, cue: str) -> str:
+    candidate = realization or cue
+    low = candidate.lower()
+    if "if " in low and " then " in low:
+        return candidate
+    if candidate:
+        return f"If this pattern appears again, apply this rule: {candidate}"
+    return "If a similar pattern appears, pause, reflect, and choose a response aligned with this realization."
+
+
+def parse_tags(raw: str | None, body: str) -> list[str]:
+    if raw:
+        cleaned = [re.sub(r"[^a-z0-9_-]", "", t.strip().lower()) for t in raw.split(",")]
+        tags = [t for t in cleaned if t]
+        if tags:
+            return tags
+    return infer_tags(body)
+
+
+def extract_fields(path: Path, body: str, title_override: str | None, confidence_override: str | None, tags_override: str | None) -> dict[str, str | list[str]]:
+    sections = extract_sections(body)
+    cues = cue_sentences(body)
+    cue = cues[0] if cues else ""
+    context = (
+        first_nonempty_line(sections.get("what happened", []))
+        or first_nonempty_line(sections.get("context", []))
+        or first_nonempty_paragraph(body)
+        or "Private journal processing context."
+    )
+    realization = (
+        first_nonempty_line(sections.get("realizations", []))
+        or first_nonempty_line(sections.get("deeper analysis", []))
+        or cue
+        or "A stable realization was identified from this journal."
+    )
+    evidence = (
+        first_nonempty_line(sections.get("deeper analysis", []))
+        or first_nonempty_line(sections.get("initial reaction", []))
+        or cue
+        or "Source journal reviewed for repeat patterns."
+    )
+    title = title_override.strip() if title_override else infer_title(path, realization or cue)
+    confidence = confidence_override or "medium"
+    tags = parse_tags(tags_override, body)
+    rel_source = path.relative_to(WORKSPACE_ROOT).as_posix()
+    return {
+        "date": date_from_path(path),
+        "title": title,
+        "context": context,
+        "realization": realization,
+        "decision_rule": as_decision_rule(realization, cue),
+        "evidence": evidence,
+        "confidence": confidence,
+        "scope": "Applies to similar conversational dynamics; re-check when context changes.",
+        "next_action": "Apply this rule in the next relevant interaction and review outcome.",
+        "source": rel_source,
+        "tags": tags,
+    }
+
+
+def prompt_with_default(label: str, default: str) -> str:
+    value = input(f"{label} [{default}]: ").strip()
+    return value if value else default
+
+
+def run_interactive(fields: dict[str, str | list[str]]) -> dict[str, str | list[str]]:
+    tags_default = ",".join(fields["tags"])  # type: ignore[index]
+    fields["title"] = prompt_with_default("Title", str(fields["title"]))
+    fields["context"] = prompt_with_default("Context", str(fields["context"]))
+    fields["realization"] = prompt_with_default("Realization", str(fields["realization"]))
+    fields["decision_rule"] = prompt_with_default("Decision Rule", str(fields["decision_rule"]))
+    fields["evidence"] = prompt_with_default("Evidence", str(fields["evidence"]))
+    fields["scope"] = prompt_with_default("Scope", str(fields["scope"]))
+    fields["next_action"] = prompt_with_default("Next Action", str(fields["next_action"]))
+    while True:
+        confidence = prompt_with_default("Confidence (low/medium/high)", str(fields["confidence"])).lower()
+        if confidence in CONFIDENCE_LEVELS:
+            fields["confidence"] = confidence
+            break
+        print("Confidence must be one of: low, medium, high")
+    tags_value = prompt_with_default("Tags (comma-separated)", tags_default)
+    fields["tags"] = parse_tags(tags_value, "")
+    return fields
+
+
+def render_entry(fields: dict[str, str | list[str]]) -> str:
+    tags = fields["tags"]  # type: ignore[index]
+    tags_text = ", ".join(f"`{t}`" for t in tags)
+    return (
+        f"### [{fields['date']}] {fields['title']}\n"
+        f"- Context: {fields['context']}\n"
+        f"- Realization: {fields['realization']}\n"
+        f"- Decision Rule: {fields['decision_rule']}\n"
+        f"- Evidence: {fields['evidence']}\n"
+        f"- Confidence: {fields['confidence']}\n"
+        f"- Scope: {fields['scope']}\n"
+        f"- Next Action: {fields['next_action']}\n"
+        f"- Source: `{fields['source']}`\n"
+        f"- Tags: {tags_text}\n"
+    )
+
+
+def ensure_private_memory_exists() -> None:
+    if PRIVATE_MEMORY_PATH.exists():
+        return
+    PRIVATE_MEMORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PRIVATE_MEMORY_PATH.write_text("# PRIVATE_MEMORY\n\n", encoding="utf-8")
+
+
+def append_entry(entry: str) -> None:
+    ensure_private_memory_exists()
+    existing = PRIVATE_MEMORY_PATH.read_text(encoding="utf-8")
+    suffix = "\n" if existing.endswith("\n") else "\n\n"
+    updated = f"{existing}{suffix}{entry}\n"
+    PRIVATE_MEMORY_PATH.write_text(updated, encoding="utf-8")
+
+
+def main() -> int:
+    args = parse_args()
+    src = resolve_input_path(args.private_file)
+    ensure_under(src, PRIVATE_ROOT, "private_file")
+
+    if not src.exists() or not src.is_file():
+        raise SystemExit(f"Source private file does not exist: {src}")
+
+    body = src.read_text(encoding="utf-8")
+    mode = "interactive" if args.interactive else "agent"
+    fields = extract_fields(src, body, args.title, args.confidence, args.tags)
+    if mode == "interactive":
+        fields = run_interactive(fields)
+
+    entry = render_entry(fields)
+
+    if args.dry_run:
+        print(f"[dry-run] Mode: {mode}")
+        print(f"[dry-run] Source: {src}")
+        print(f"[dry-run] Destination: {PRIVATE_MEMORY_PATH}")
+        print()
+        print(entry)
+        return 0
+
+    append_entry(entry)
+    print(f"Mode: {mode}")
+    print(f"Source: {src}")
+    print(f"Distilled to PRIVATE_MEMORY: {PRIVATE_MEMORY_PATH}")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except KeyboardInterrupt:
+        print("Interrupted.", file=sys.stderr)
+        raise SystemExit(130)
