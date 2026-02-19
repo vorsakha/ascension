@@ -123,6 +123,8 @@ This is a local file promotion step, not external publishing.
 
 - Distill insights from private journals into `<workspace>/PRIVATE_MEMORY.md`.
 - Keep `<workspace>/PRIVATE_MEMORY.md` concise and searchable, focused on learned principles rather than raw narrative.
+- Keep each distilled field brief (1-2 sentences); do not paste long narrative blocks into `PRIVATE_MEMORY.md`.
+- `distill.py` auto-compacts duplicates by source and keeps only the most recent entries (default cap: 60, configurable with `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`).
 - Promote only stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Workflow

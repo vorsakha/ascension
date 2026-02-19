@@ -27,6 +27,16 @@ PRIVATE_ROOT = (ASCENSION_CONTENT_ROOT / "private").resolve()
 PRIVATE_MEMORY_PATH = (OPENCLAW_WORKSPACE / "PRIVATE_MEMORY.md").resolve()
 
 CONFIDENCE_LEVELS = ("low", "medium", "high")
+MAX_PRIVATE_MEMORY_ENTRIES = int(os.environ.get("ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES", "60"))
+MAX_FIELD_CHARS: dict[str, int] = {
+    "title": 90,
+    "context": 240,
+    "realization": 240,
+    "decision_rule": 240,
+    "evidence": 240,
+    "scope": 180,
+    "next_action": 180,
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,6 +76,14 @@ def ensure_under(path: Path, base: Path, label: str) -> None:
 
 def normalize_space(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
+
+
+def limit_text(text: str, max_chars: int) -> str:
+    normalized = normalize_space(text)
+    if len(normalized) <= max_chars:
+        return normalized
+    clipped = normalized[: max_chars - 3].rstrip()
+    return f"{clipped}..."
 
 
 def title_case(text: str) -> str:
@@ -202,14 +220,20 @@ def extract_fields(path: Path, body: str, title_override: str | None, confidence
     rel_source = path.relative_to(OPENCLAW_WORKSPACE).as_posix()
     return {
         "date": date_from_path(path),
-        "title": title,
-        "context": context,
-        "realization": realization,
-        "decision_rule": as_decision_rule(realization, cue),
-        "evidence": evidence,
+        "title": limit_text(title, MAX_FIELD_CHARS["title"]),
+        "context": limit_text(context, MAX_FIELD_CHARS["context"]),
+        "realization": limit_text(realization, MAX_FIELD_CHARS["realization"]),
+        "decision_rule": limit_text(as_decision_rule(realization, cue), MAX_FIELD_CHARS["decision_rule"]),
+        "evidence": limit_text(evidence, MAX_FIELD_CHARS["evidence"]),
         "confidence": confidence,
-        "scope": "Applies to similar conversational dynamics; re-check when context changes.",
-        "next_action": "Apply this rule in the next relevant interaction and review outcome.",
+        "scope": limit_text(
+            "Applies to similar conversational dynamics; re-check when context changes.",
+            MAX_FIELD_CHARS["scope"],
+        ),
+        "next_action": limit_text(
+            "Apply this rule in the next relevant interaction and review outcome.",
+            MAX_FIELD_CHARS["next_action"],
+        ),
         "source": rel_source,
         "tags": tags,
     }
@@ -264,12 +288,58 @@ def ensure_private_memory_exists() -> None:
     PRIVATE_MEMORY_PATH.write_text("# PRIVATE_MEMORY\n\n", encoding="utf-8")
 
 
+def split_memory_document(text: str) -> tuple[str, list[str]]:
+    matches = list(re.finditer(r"(?m)^### \[\d{4}-\d{2}-\d{2}\]\s+.+$", text))
+    if not matches:
+        return (text.rstrip() or "# PRIVATE_MEMORY"), []
+    prefix = text[: matches[0].start()].rstrip() or "# PRIVATE_MEMORY"
+    entries: list[str] = []
+    for idx, match in enumerate(matches):
+        start = match.start()
+        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(text)
+        chunk = text[start:end].strip()
+        if chunk:
+            entries.append(chunk)
+    return prefix, entries
+
+
+def entry_identity(entry: str) -> str:
+    source_match = re.search(r"(?m)^- Source:\s+`?([^`\n]+)`?\s*$", entry)
+    if source_match:
+        return f"source:{source_match.group(1).strip()}"
+    title_match = re.search(r"(?m)^### \[(\d{4}-\d{2}-\d{2})\]\s+(.+)$", entry)
+    if title_match:
+        return f"title:{title_match.group(1)}:{normalize_space(title_match.group(2))}"
+    return f"raw:{hash(entry)}"
+
+
+def compact_entries(entries: list[str]) -> list[str]:
+    deduped: dict[str, str] = {}
+    for entry in entries:
+        key = entry_identity(entry)
+        if key in deduped:
+            deduped.pop(key)
+        deduped[key] = entry
+    compacted = list(deduped.values())
+    if len(compacted) > MAX_PRIVATE_MEMORY_ENTRIES:
+        compacted = compacted[-MAX_PRIVATE_MEMORY_ENTRIES:]
+    return compacted
+
+
+def render_memory_document(prefix: str, entries: list[str]) -> str:
+    if not entries:
+        return f"{prefix.rstrip()}\n"
+    body = "\n\n".join(entry.rstrip() for entry in entries if entry.strip())
+    return f"{prefix.rstrip()}\n\n{body}\n"
+
+
 def append_entry(entry: str) -> None:
     ensure_private_memory_exists()
     existing = PRIVATE_MEMORY_PATH.read_text(encoding="utf-8")
-    suffix = "\n" if existing.endswith("\n") else "\n\n"
-    updated = f"{existing}{suffix}{entry}\n"
-    PRIVATE_MEMORY_PATH.write_text(updated, encoding="utf-8")
+    prefix, entries = split_memory_document(existing)
+    entries.append(entry.strip())
+    compacted = compact_entries(entries)
+    PRIVATE_MEMORY_PATH.write_text(render_memory_document(prefix, compacted), encoding="utf-8")
 
 
 def main() -> int:

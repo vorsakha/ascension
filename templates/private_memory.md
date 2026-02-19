@@ -6,6 +6,8 @@
 - Keep language concise, specific, and searchable.
 - Prefer principles over narrative.
 - Link to source journal files when useful.
+- Keep each field short (1-2 sentences max).
+- Keep only recent, non-duplicate entries in this file.
 
 ## Entry Template
 
@@ -34,3 +36,9 @@
 - Nightly: append new realizations from private journals.
 - Weekly: merge duplicates and refine decision rules.
 - Monthly: promote stable, public-safe realizations to core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`).
+
+## Retention Budget
+
+- Default cap: 60 entries (new writes auto-compact and drop oldest overflow).
+- Optional override: set `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`.
+- Keep detailed narratives in `ascension/private/*.md`; keep only distilled rules here.
