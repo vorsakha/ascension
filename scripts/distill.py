@@ -54,13 +54,6 @@ def resolve_input_path(raw: str) -> Path:
         return candidate.resolve()
 
     text = raw.strip().lstrip("./")
-    if text.startswith("content/"):
-        raise SystemExit(
-            "Legacy 'content/...' paths are unsupported. Use "
-            "'<workspace>/ascension/...' or 'private/...'. "
-            "Workspace comes from $ASCENSION_WORKSPACE, then $OPENCLAW_WORKSPACE, "
-            "defaulting to $HOME/.openclaw/workspace."
-        )
     if text.startswith("private/"):
         return (ASCENSION_CONTENT_ROOT / text).resolve()
     return candidate.resolve()

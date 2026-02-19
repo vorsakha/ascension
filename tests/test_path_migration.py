@@ -33,15 +33,17 @@ class PathMigrationTests(unittest.TestCase):
             self.assertEqual(publish_script.resolve_workspace_root(), Path("/tmp/openclaw_ws").resolve())
             self.assertEqual(telegram_script.resolve_workspace_root(), Path("/tmp/openclaw_ws").resolve())
 
-    def test_distill_rejects_legacy_content_paths(self):
+    def test_distill_content_paths_fail_private_root_check(self):
+        resolved = distill_script.resolve_input_path("content/private/example.md")
         with self.assertRaises(SystemExit) as exc:
-            distill_script.resolve_input_path("content/private/example.md")
-        self.assertIn("Legacy 'content/...' paths are unsupported", str(exc.exception))
+            distill_script.ensure_under(resolved, distill_script.PRIVATE_ROOT, "private_file")
+        self.assertIn("private_file must be under", str(exc.exception))
 
-    def test_publish_rejects_legacy_content_paths(self):
+    def test_publish_content_paths_fail_public_root_check(self):
+        resolved = publish_script.resolve_input_path("content/public/example.md", kind="public")
         with self.assertRaises(SystemExit) as exc:
-            publish_script.resolve_input_path("content/public/example.md", kind="public")
-        self.assertIn("Legacy 'content/...' paths are unsupported", str(exc.exception))
+            publish_script.ensure_under(resolved, publish_script.PUBLIC_ROOT, "public_file")
+        self.assertIn("public_file must be under", str(exc.exception))
 
     def test_publish_shortcuts_map_to_openclaw_tree(self):
         private_path = publish_script.resolve_input_path("private/a.md", kind="private")

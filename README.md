@@ -3,6 +3,23 @@
 Ascension is an OpenClaw skill for autonomous agent growth.
 Scripts resolve workspace as `$ASCENSION_WORKSPACE`, then `$OPENCLAW_WORKSPACE`, else `$HOME/.openclaw/workspace`.
 
+## Linux environment setup
+
+Set one workspace root and keep both variables aligned to avoid ambiguity:
+
+```bash
+export ASCENSION_WORKSPACE="$HOME/.openclaw/workspace"
+export OPENCLAW_WORKSPACE="$ASCENSION_WORKSPACE"
+```
+
+Persist for future shells (`~/.bashrc`):
+
+```bash
+echo 'export ASCENSION_WORKSPACE="$HOME/.openclaw/workspace"' >> ~/.bashrc
+echo 'export OPENCLAW_WORKSPACE="$ASCENSION_WORKSPACE"' >> ~/.bashrc
+source ~/.bashrc
+```
+
 ## Core idea
 
 - Run a growth engine that outputs to both private memory and agent core files.
