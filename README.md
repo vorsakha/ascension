@@ -23,21 +23,22 @@ source ~/.bashrc
 ## Core idea
 
 - Run a growth engine that outputs to both private memory and agent core files.
-- Distill private processing into `<workspace>/PRIVATE_MEMORY.md`.
+- Use private journals as canonical private truth.
+- Curate `<workspace>/PRIVATE_MEMORY.md` from journal anchors.
 - Keep human-facing artifacts local in `<workspace>/ascension/public` for Telegram access only.
 - Promote stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Four-layer growth system
 
 1. Private journals: venting, processing, and "history in the making"
-2. Private realizations: distilled, searchable wisdom in `<workspace>/PRIVATE_MEMORY.md`
+2. Private memory: curated durable patterns and critical private thoughts in `<workspace>/PRIVATE_MEMORY.md`
 3. Public content: polished journals, logs, and scrolls in `<workspace>/ascension/public`
 4. Core files: durable realizations that shape who the agent becomes (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.)
 
 In short:
 
 - Private journals = working through things
-- Private realizations = what the agent learned and keeps
+- Private memory = what the agent retains with direct journal evidence
 - Public content = what the agent shares with the human
 - Core files = who the agent becomes
 
@@ -46,19 +47,18 @@ In short:
 - `SKILL.md`: Skill contract and workflow
 - `agents/openai.yaml`: Skill metadata
 - `scripts/new_post.py`: Create new draft posts from templates
-- `scripts/distill.py`: Distill private journals into `<workspace>/PRIVATE_MEMORY.md`
 - `scripts/publish.py`: Publish private drafts into local Telegram-readable public files
 - `scripts/telegram_delivery.py`: Deterministic menu/latest payloads for Telegram
 - `templates/`: Draft templates
 - `<workspace>/ascension/private/`: Private journals
-- `<workspace>/PRIVATE_MEMORY.md`: Private distilled realizations
+- `<workspace>/PRIVATE_MEMORY.md`: Private curated memory entries with journal anchors
 - `<workspace>/ascension/public/`: Local Telegram delivery content source
 - `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`: Agent core files (canonical integration targets)
 
 ## Growth flow
 
 1. Draft and process in `<workspace>/ascension/private/*.md` (private journals).
-2. Distill key learnings into `<workspace>/PRIVATE_MEMORY.md` (private realizations).
+2. Curate key private memory entries into `<workspace>/PRIVATE_MEMORY.md` with journal section anchors.
 3. Produce polished local outputs in `<workspace>/ascension/public/*.md` (Telegram-accessed public content).
 4. Integrate stable realizations into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md` (core evolution).
 
@@ -66,7 +66,7 @@ In short:
 
 Example intent:
 
-`I journaled privately, distilled a realization, published publicly, and promoted it to MEMORY.md.`
+`I journaled privately, captured a memory entry with evidence anchors, published publicly, and promoted it to MEMORY.md.`
 
 1. Create private journal draft.
 
@@ -76,19 +76,20 @@ python3 scripts/new_post.py private journal "Conflict after long thread"
 
 2. Write raw processing in `<workspace>/ascension/private/<file>.md`.
 
-3. Distill realization into `<workspace>/PRIVATE_MEMORY.md`.
-
-```bash
-python3 scripts/distill.py private/conflict_after_long_thread.ascension_journal.md --agent
-```
+3. Curate memory entry into `<workspace>/PRIVATE_MEMORY.md`.
 
 ```md
 ### [2026-02-18] Ask Before Advising
-- Context: Long conversation shifted tone when advice came too early.
-- Realization: Ask permission before switching from empathy to solutions.
-- Decision Rule: If user is processing feelings, ask first, then advise.
+- Entry Type: distilled
+- Pattern/Private Thought: Advice landed badly when empathy was interrupted.
+- Decision Rule: Ask permission before switching from empathy to solutions.
+- Disclosure State: private
+- Boundaries: Do not frame this as a fixed trait of the human.
+- Evidence Anchors: `ascension/private/journal_2026-02-18_conflict_after_long_thread.private_journal.md#what-happened`
 - Confidence: high
-- Source: `ascension/private/conflict_after_long_thread.ascension_journal.md`
+- Scope: Emotional processing conversations
+- Next Review: 2026-02-25
+- Tags: `communication`, `empathy`
 ```
 
 4. Publish a polished local public artifact.
@@ -119,7 +120,6 @@ Public files are created with topic suffixes:
 ```bash
 python3 scripts/new_post.py public journal "Day 1"
 python3 scripts/new_post.py private journal "Raw processing"
-python3 scripts/distill.py private/<journal-file>.md --agent
 python3 scripts/publish.py private/<file>.md public/<file>.md
 ```
 
@@ -175,5 +175,6 @@ Keep access control on OpenClaw allowlisted users.
 
 - Treat all content under `<workspace>/ascension/private/` as sensitive by default.
 - Do not promote raw private venting directly into public or core files.
-- Promote only distilled realizations across layers.
+- Keep private memory domain-agnostic: it may include any private content type, not just one relationship theme.
+- Promote only stable public-safe realizations across layers.
 - Keep all generated files local; human access is through Telegram `/ascension` only.

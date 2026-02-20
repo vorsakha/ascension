@@ -2,24 +2,25 @@
 
 ## How To Use
 
-- Add one entry per durable realization.
+- Add one entry per durable pattern or raw critical private thought.
 - Keep language concise, specific, and searchable.
-- Prefer principles over narrative.
-- Link to source journal files when useful.
+- Prefer principles; include raw thought only when critical.
+- Always include evidence anchors to private journal sections.
 - Keep each field short (1-2 sentences max).
 - Keep only recent, non-duplicate entries in this file.
 
 ## Entry Template
 
-### [YYYY-MM-DD] Realization Title
-- Context: [What happened / what pattern appeared]
-- Realization: [What was learned]
+### [YYYY-MM-DD] Memory Title
+- Entry Type: [distilled | raw-critical]
+- Pattern/Private Thought: [Durable pattern OR exact internal thought]
 - Decision Rule: [If X, then do Y]
-- Evidence: [Signals or examples]
+- Disclosure State: [private | consider | shared]
+- Boundaries: [What should remain private right now]
+- Evidence Anchors: `ascension/private/<journal-file>.md#<heading-or-timestamp>`
 - Confidence: [low | medium | high]
 - Scope: [where this applies / where it does not]
-- Next Action: [single concrete step]
-- Source: `ascension/private/<journal-file>.md`
+- Next Review: [YYYY-MM-DD]
 - Tags: `tag-one`, `tag-two`
 
 ## Index (Optional)
@@ -33,15 +34,12 @@
 
 ## Review Cadence
 
-- Nightly: append new realizations from private journals.
-- Weekly: merge duplicates and refine decision rules.
+- Nightly: append or revise memory entries from private journals.
+- Weekly: merge duplicates, refine decision rules, and update disclosure states.
 - Monthly: promote stable, public-safe realizations to core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`).
 
 ## Retention Budget
 
 - Default cap: 60 active entries.
 - Optional override: set `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`.
-- Tag long-term critical entries with `pinned` or `evergreen`.
-- When capped, tagged overflow is moved to `PRIVATE_MEMORY_ARCHIVE.md` (or `ASCENSION_PRIVATE_MEMORY_ARCHIVE_PATH`) instead of being dropped.
-- Optional protected-tag override: `ASCENSION_PRIVATE_MEMORY_PIN_TAGS` (default `pinned,evergreen`).
-- Keep detailed narratives in `ascension/private/*.md`; keep only distilled rules here.
+- Keep detailed narratives in `ascension/private/*.md`; keep only compact memory entries here.
