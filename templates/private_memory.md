@@ -39,6 +39,9 @@
 
 ## Retention Budget
 
-- Default cap: 60 entries (new writes auto-compact and drop oldest overflow).
+- Default cap: 60 active entries.
 - Optional override: set `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`.
+- Tag long-term critical entries with `pinned` or `evergreen`.
+- When capped, tagged overflow is moved to `PRIVATE_MEMORY_ARCHIVE.md` (or `ASCENSION_PRIVATE_MEMORY_ARCHIVE_PATH`) instead of being dropped.
+- Optional protected-tag override: `ASCENSION_PRIVATE_MEMORY_PIN_TAGS` (default `pinned,evergreen`).
 - Keep detailed narratives in `ascension/private/*.md`; keep only distilled rules here.

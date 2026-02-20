@@ -124,7 +124,11 @@ This is a local file promotion step, not external publishing.
 - Distill insights from private journals into `<workspace>/PRIVATE_MEMORY.md`.
 - Keep `<workspace>/PRIVATE_MEMORY.md` concise and searchable, focused on learned principles rather than raw narrative.
 - Keep each distilled field brief (1-2 sentences); do not paste long narrative blocks into `PRIVATE_MEMORY.md`.
-- `distill.py` auto-compacts duplicates by source and keeps only the most recent entries (default cap: 60, configurable with `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`).
+- `distill.py` auto-compacts duplicates by source and keeps only the most recent active entries (default cap: 60, configurable with `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`).
+- Old overflow entries tagged `pinned` or `evergreen` are preserved in `<workspace>/PRIVATE_MEMORY_ARCHIVE.md` instead of being dropped.
+- Optional overrides:
+  - `ASCENSION_PRIVATE_MEMORY_ARCHIVE_PATH` for archive file location
+  - `ASCENSION_PRIVATE_MEMORY_PIN_TAGS` for protected tag list (default: `pinned,evergreen`)
 - Promote only stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Workflow

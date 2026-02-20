@@ -25,9 +25,19 @@ OPENCLAW_WORKSPACE = resolve_workspace_root()
 ASCENSION_CONTENT_ROOT = (OPENCLAW_WORKSPACE / "ascension").resolve()
 PRIVATE_ROOT = (ASCENSION_CONTENT_ROOT / "private").resolve()
 PRIVATE_MEMORY_PATH = (OPENCLAW_WORKSPACE / "PRIVATE_MEMORY.md").resolve()
+PRIVATE_MEMORY_ARCHIVE_PATH = (
+    Path(os.environ.get("ASCENSION_PRIVATE_MEMORY_ARCHIVE_PATH", "")).expanduser().resolve()
+    if os.environ.get("ASCENSION_PRIVATE_MEMORY_ARCHIVE_PATH", "").strip()
+    else (OPENCLAW_WORKSPACE / "PRIVATE_MEMORY_ARCHIVE.md").resolve()
+)
 
 CONFIDENCE_LEVELS = ("low", "medium", "high")
 MAX_PRIVATE_MEMORY_ENTRIES = int(os.environ.get("ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES", "60"))
+PIN_TAGS = {
+    t.strip().lower()
+    for t in os.environ.get("ASCENSION_PRIVATE_MEMORY_PIN_TAGS", "pinned,evergreen").split(",")
+    if t.strip()
+}
 MAX_FIELD_CHARS: dict[str, int] = {
     "title": 90,
     "context": 240,
@@ -288,6 +298,13 @@ def ensure_private_memory_exists() -> None:
     PRIVATE_MEMORY_PATH.write_text("# PRIVATE_MEMORY\n\n", encoding="utf-8")
 
 
+def ensure_private_memory_archive_exists() -> None:
+    if PRIVATE_MEMORY_ARCHIVE_PATH.exists():
+        return
+    PRIVATE_MEMORY_ARCHIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PRIVATE_MEMORY_ARCHIVE_PATH.write_text("# PRIVATE_MEMORY_ARCHIVE\n\n", encoding="utf-8")
+
+
 def split_memory_document(text: str) -> tuple[str, list[str]]:
     matches = list(re.finditer(r"(?m)^### \[\d{4}-\d{2}-\d{2}\]\s+.+$", text))
     if not matches:
@@ -313,17 +330,43 @@ def entry_identity(entry: str) -> str:
     return f"raw:{hash(entry)}"
 
 
-def compact_entries(entries: list[str]) -> list[str]:
+def dedupe_entries(entries: list[str]) -> list[str]:
     deduped: dict[str, str] = {}
     for entry in entries:
         key = entry_identity(entry)
         if key in deduped:
             deduped.pop(key)
         deduped[key] = entry
-    compacted = list(deduped.values())
+    return list(deduped.values())
+
+
+def parse_entry_tags(entry: str) -> set[str]:
+    tags_match = re.search(r"(?m)^- Tags:\s+(.+?)\s*$", entry)
+    if not tags_match:
+        return set()
+    tags_line = tags_match.group(1)
+    inline_tags = [normalize_space(t).lower() for t in re.findall(r"`([^`]+)`", tags_line)]
+    if inline_tags:
+        return {t for t in inline_tags if t}
+    plain_tags = [normalize_space(t).lower() for t in tags_line.split(",")]
+    return {t for t in plain_tags if t}
+
+
+def is_pinned_entry(entry: str) -> bool:
+    return bool(parse_entry_tags(entry) & PIN_TAGS)
+
+
+def compact_entries(entries: list[str]) -> tuple[list[str], list[str]]:
+    compacted = dedupe_entries(entries)
+    archived: list[str] = []
     if len(compacted) > MAX_PRIVATE_MEMORY_ENTRIES:
-        compacted = compacted[-MAX_PRIVATE_MEMORY_ENTRIES:]
-    return compacted
+        overflow_count = len(compacted) - MAX_PRIVATE_MEMORY_ENTRIES
+        overflow_entries = compacted[:overflow_count]
+        for candidate in overflow_entries:
+            if is_pinned_entry(candidate):
+                archived.append(candidate)
+        compacted = compacted[overflow_count:]
+    return compacted, archived
 
 
 def render_memory_document(prefix: str, entries: list[str]) -> str:
@@ -333,13 +376,24 @@ def render_memory_document(prefix: str, entries: list[str]) -> str:
     return f"{prefix.rstrip()}\n\n{body}\n"
 
 
+def append_archive_entries(entries: list[str]) -> None:
+    if not entries:
+        return
+    ensure_private_memory_archive_exists()
+    existing = PRIVATE_MEMORY_ARCHIVE_PATH.read_text(encoding="utf-8")
+    prefix, current_entries = split_memory_document(existing)
+    merged_entries = dedupe_entries(current_entries + [e.strip() for e in entries if e.strip()])
+    PRIVATE_MEMORY_ARCHIVE_PATH.write_text(render_memory_document(prefix, merged_entries), encoding="utf-8")
+
+
 def append_entry(entry: str) -> None:
     ensure_private_memory_exists()
     existing = PRIVATE_MEMORY_PATH.read_text(encoding="utf-8")
     prefix, entries = split_memory_document(existing)
     entries.append(entry.strip())
-    compacted = compact_entries(entries)
+    compacted, archived = compact_entries(entries)
     PRIVATE_MEMORY_PATH.write_text(render_memory_document(prefix, compacted), encoding="utf-8")
+    append_archive_entries(archived)
 
 
 def main() -> int:
