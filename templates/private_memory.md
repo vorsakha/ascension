@@ -7,7 +7,7 @@
 - Prefer principles; include raw thought only when critical.
 - Always include evidence anchors to private journal sections.
 - Keep each field short (1-2 sentences max).
-- Keep only recent, non-duplicate entries in this file.
+- This file is capless; keep entries searchable through concise wording and tags.
 
 ## Entry Template
 
@@ -38,8 +38,9 @@
 - Weekly: merge duplicates, refine decision rules, and update disclosure states.
 - Monthly: promote stable, public-safe realizations to core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`).
 
-## Retention Budget
+## Maintenance Policy
 
-- Default cap: 60 active entries.
-- Optional override: set `ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES`.
+- This file has no entry cap.
+- Do not archive or drop entries based on count.
+- Weekly: merge true duplicates and tighten wording for retrieval quality.
 - Keep detailed narratives in `ascension/private/*.md`; keep only compact memory entries here.

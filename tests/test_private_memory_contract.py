@@ -20,6 +20,8 @@ class PrivateMemoryContractTests(unittest.TestCase):
         self.assertIn("Disclosure State:", template)
         self.assertIn("Evidence Anchors:", template)
         self.assertIn("Pattern/Private Thought:", template)
+        self.assertIn("no entry cap", template)
+        self.assertNotIn("ASCENSION_PRIVATE_MEMORY_MAX_ENTRIES", template)
 
 
 if __name__ == "__main__":

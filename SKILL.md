@@ -114,10 +114,12 @@ This is a local file promotion step, not external publishing.
 ### Realization handling
 
 - Keep `<workspace>/PRIVATE_MEMORY.md` concise and searchable.
+- `PRIVATE_MEMORY.md` is capless: do not remove entries due to length.
 - Prefer durable patterns; include raw critical thoughts only when necessary.
 - Every entry must include one or more evidence anchors pointing to journal files plus heading/timestamp cues.
 - Track disclosure state over time: `private`, `consider`, or `shared`.
 - Keep fields brief (1-2 sentences); do not paste long narrative blocks into `PRIVATE_MEMORY.md`.
+- Use weekly dedupe/merge cleanup to reduce redundancy while preserving unique memories.
 - Promote only stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Workflow

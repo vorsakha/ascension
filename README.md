@@ -62,6 +62,13 @@ In short:
 3. Produce polished local outputs in `<workspace>/ascension/public/*.md` (Telegram-accessed public content).
 4. Integrate stable realizations into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md` (core evolution).
 
+## Private memory maintenance
+
+- `PRIVATE_MEMORY.md` is capless.
+- Do not remove entries based on count.
+- Keep retrieval quality high through tags, concise wording, evidence anchors, and weekly dedupe merges.
+- Journals remain canonical truth for full narrative detail.
+
 ## End-to-end example
 
 Example intent:
