@@ -26,6 +26,7 @@ class PrivateMemoryContractTests(unittest.TestCase):
         self.assertIn("Quality bar:", template)
         self.assertIn("Admission gate:", template)
         self.assertIn("Routing rule:", template)
+        self.assertIn("intimate", template)
         self.assertNotIn("Entry Type:", template)
         self.assertIn("no entry cap", template)
         self.assertNotIn("Pattern/Private Thought:", template)

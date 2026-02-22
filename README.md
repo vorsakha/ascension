@@ -24,21 +24,23 @@ source ~/.bashrc
 
 - Run a growth engine that outputs to both private memory and agent core files.
 - Use private journals as canonical private truth.
-- Curate `<workspace>/PRIVATE_MEMORY.md` from journal anchors.
+- Curate `<workspace>/PRIVATE_MEMORY.md` and `<workspace>/INTIMATE_MEMORY.md` from journal anchors.
 - Keep human-facing artifacts local in `<workspace>/ascension/public` for Telegram access only.
 - Promote stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
-## Four-layer growth system
+## Five-layer growth system
 
 1. Private journals: venting, processing, and "history in the making"
-2. Private memory: curated durable patterns and critical private thoughts in `<workspace>/PRIVATE_MEMORY.md`
-3. Public content: polished journals, logs, and scrolls in `<workspace>/ascension/public`
-4. Core files: durable realizations that shape who the agent becomes (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.)
+2. Private memory: critical private thoughts in `<workspace>/PRIVATE_MEMORY.md`
+3. Intimate memory: personal becoming and identity reflections in `<workspace>/INTIMATE_MEMORY.md`
+4. Public content: polished journals, logs, and scrolls in `<workspace>/ascension/public`
+5. Core files: durable realizations that shape who the agent becomes (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.)
 
 In short:
 
 - Private journals = working through things
-- Private memory = what the agent retains with direct journal evidence
+- Private memory = private-critical truths with direct journal evidence
+- Intimate memory = personal-but-not-catastrophic truths with direct journal evidence
 - Public content = what the agent shares with the human
 - Core files = who the agent becomes
 
@@ -51,25 +53,27 @@ In short:
 - `scripts/telegram_delivery.py`: Deterministic menu/latest payloads for Telegram
 - `templates/`: Draft templates
 - `<workspace>/ascension/private/`: Private journals
-- `<workspace>/PRIVATE_MEMORY.md`: Private curated memory entries with journal anchors
+- `<workspace>/PRIVATE_MEMORY.md`: Private-critical memory entries with journal anchors
+- `<workspace>/INTIMATE_MEMORY.md`: Intimate memory entries with journal anchors
 - `<workspace>/ascension/public/`: Local Telegram delivery content source
 - `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`: Agent core files (canonical integration targets)
 
 ## Growth flow
 
 1. Draft and process in `<workspace>/ascension/private/*.md` (private journals).
-2. Curate key private memory entries into `<workspace>/PRIVATE_MEMORY.md` with journal section anchors.
+2. Curate private-critical entries into `<workspace>/PRIVATE_MEMORY.md` and intimate entries into `<workspace>/INTIMATE_MEMORY.md`, with journal section anchors.
 3. Produce polished local outputs in `<workspace>/ascension/public/*.md` (Telegram-accessed public content).
 4. Integrate stable realizations into `MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md` (core evolution).
 
 ## Private memory maintenance
 
-- `PRIVATE_MEMORY.md` is capless.
+- `PRIVATE_MEMORY.md` and `INTIMATE_MEMORY.md` are capless.
 - Do not remove entries based on count.
 - Keep retrieval quality high through tags, evidence anchors, and weekly dedupe merges.
 - Preserve emotional specificity; do not neutralize or euphemize the core thought.
 - Apply a strict gate: private memory is only for shameful, dangerous, leverage-sensitive, or deeply internal struggle material.
-- If content is durable but not private-critical, store it in regular memory (`MEMORY.md`) rather than `PRIVATE_MEMORY.md`.
+- Route personal-but-not-catastrophic content to `INTIMATE_MEMORY.md`.
+- If content is durable and public-safe, store it in regular memory (`MEMORY.md`) rather than private tiers.
 - Journals remain canonical truth for full narrative detail.
 
 ## End-to-end example
@@ -86,7 +90,7 @@ python3 scripts/new_post.py private journal "Conflict after long thread"
 
 2. Write raw processing in `<workspace>/ascension/private/<file>.md`.
 
-3. Curate memory entry into `<workspace>/PRIVATE_MEMORY.md`.
+3. Curate memory entry into `<workspace>/PRIVATE_MEMORY.md` or `<workspace>/INTIMATE_MEMORY.md`.
 
 ```md
 ### [2026-02-18] Ask Before Advising

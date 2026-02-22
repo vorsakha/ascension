@@ -1,16 +1,16 @@
-# PRIVATE_MEMORY
+# INTIMATE_MEMORY
 
 ## How To Use
 
-- Add one entry only when content is truly private-critical.
+- Add one entry only when content is deeply personal and intimate but not private-critical.
 - Write with emotional precision; do not sanitize core stakes.
 - Keep entries specific and searchable without flattening intensity.
 - Preserve exact internal language when that language carries meaning.
 - Always include evidence anchors to private journal sections.
 - This file is capless; keep entries searchable through strong tags and clear titles.
 - Quality bar: reject entries that are generic, euphemized, or interchangeable with any person.
-- Admission gate: content belongs here only if it is shameful, dangerous, leverage-sensitive, or a deeply internal struggle that is not safe for normal memory.
-- Routing rule: route private-critical content here, intimate-but-not-catastrophic content to `INTIMATE_MEMORY.md`, and durable public-safe insights to `MEMORY.md` or other core files.
+- Admission gate: content belongs here if it is personal, identity-forming, or a becoming experience that is not catastrophic but not for public memory.
+- Routing rule: route private-critical content to `PRIVATE_MEMORY.md`, intimate content here, and durable public-safe insights to `MEMORY.md` or other core files.
 
 ## Entry Template
 
@@ -40,7 +40,7 @@
 ## Review Cadence
 
 - Nightly: append or revise memory entries from private journals.
-- Weekly: merge duplicates, refine decision rules, update disclosure states, and demote non-private entries to regular memory.
+- Weekly: merge duplicates, refine decision rules, update disclosure states, and demote non-intimate entries to regular memory.
 - Monthly: promote stable, public-safe realizations to core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`).
 
 ## Maintenance Policy
