@@ -15,7 +15,6 @@
 ## Entry Template
 
 ### [YYYY-MM-DD] Memory Title
-- Entry Type: [distilled | raw-critical]
 - Private-Critical Reason: [Why this cannot live in normal memory]
 - Raw Core: [Exact internal truth in direct language; no euphemisms]
 - Why It Matters: [Stakes, fear, desire, consequence]

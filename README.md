@@ -90,7 +90,6 @@ python3 scripts/new_post.py private journal "Conflict after long thread"
 
 ```md
 ### [2026-02-18] Ask Before Advising
-- Entry Type: distilled
 - Raw Core: I cut from empathy to fixing mode too early, and it felt like I stopped seeing the person in front of me.
 - Why It Matters: If I optimize for being useful before attunement, I can damage trust in moments when trust is the whole point.
 - Decision Rule: Ask permission before switching from empathy to solutions.

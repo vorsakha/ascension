@@ -16,7 +16,6 @@ class PrivateMemoryContractTests(unittest.TestCase):
 
     def test_private_memory_template_has_dual_layer_fields(self):
         template = (Path(__file__).resolve().parents[1] / "templates" / "private_memory.md").read_text(encoding="utf-8")
-        self.assertIn("Entry Type:", template)
         self.assertIn("Private-Critical Reason:", template)
         self.assertIn("Disclosure State:", template)
         self.assertIn("Evidence Anchors:", template)
@@ -27,6 +26,7 @@ class PrivateMemoryContractTests(unittest.TestCase):
         self.assertIn("Quality bar:", template)
         self.assertIn("Admission gate:", template)
         self.assertIn("Routing rule:", template)
+        self.assertNotIn("Entry Type:", template)
         self.assertIn("no entry cap", template)
         self.assertNotIn("Pattern/Private Thought:", template)
         self.assertNotIn("1-2 sentences max", template)
