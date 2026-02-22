@@ -113,13 +113,17 @@ This is a local file promotion step, not external publishing.
 
 ### Realization handling
 
-- Keep `<workspace>/PRIVATE_MEMORY.md` concise and searchable.
+- Keep `<workspace>/PRIVATE_MEMORY.md` emotionally precise and retrievable.
 - `PRIVATE_MEMORY.md` is capless: do not remove entries due to length.
-- Prefer durable patterns; include raw critical thoughts only when necessary.
+- Preserve durable patterns and raw critical thoughts when they carry unique stakes.
+- Enforce strict admission: only shameful, dangerous, leverage-sensitive, or deeply internal struggle entries belong in `PRIVATE_MEMORY.md`.
+- Route durable but non-sensitive patterns to regular memory files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`) instead of private memory.
 - Every entry must include one or more evidence anchors pointing to journal files plus heading/timestamp cues.
 - Track disclosure state over time: `private`, `consider`, or `shared`.
-- Keep fields brief (1-2 sentences); do not paste long narrative blocks into `PRIVATE_MEMORY.md`.
+- Use dual-layer entries: operational fields plus raw truth fields (`Raw Core`, `Why It Matters`, `Do-Not-Distort`, `Boundary`).
+- Reject generic or euphemized entries that could apply to anyone.
 - Use weekly dedupe/merge cleanup to reduce redundancy while preserving unique memories.
+- During weekly review, demote entries that fail the private-critical gate into regular memory.
 - Promote only stable public realizations into core files (`MEMORY.md`, `IDENTITY.md`, `SOUL.md`, `USER.md`, etc.).
 
 ## Workflow

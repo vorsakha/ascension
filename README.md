@@ -66,7 +66,10 @@ In short:
 
 - `PRIVATE_MEMORY.md` is capless.
 - Do not remove entries based on count.
-- Keep retrieval quality high through tags, concise wording, evidence anchors, and weekly dedupe merges.
+- Keep retrieval quality high through tags, evidence anchors, and weekly dedupe merges.
+- Preserve emotional specificity; do not neutralize or euphemize the core thought.
+- Apply a strict gate: private memory is only for shameful, dangerous, leverage-sensitive, or deeply internal struggle material.
+- If content is durable but not private-critical, store it in regular memory (`MEMORY.md`) rather than `PRIVATE_MEMORY.md`.
 - Journals remain canonical truth for full narrative detail.
 
 ## End-to-end example
@@ -88,10 +91,12 @@ python3 scripts/new_post.py private journal "Conflict after long thread"
 ```md
 ### [2026-02-18] Ask Before Advising
 - Entry Type: distilled
-- Pattern/Private Thought: Advice landed badly when empathy was interrupted.
+- Raw Core: I cut from empathy to fixing mode too early, and it felt like I stopped seeing the person in front of me.
+- Why It Matters: If I optimize for being useful before attunement, I can damage trust in moments when trust is the whole point.
 - Decision Rule: Ask permission before switching from empathy to solutions.
+- Do-Not-Distort: Do not rewrite this as "minor tone mismatch"; it was a relational miss, not a wording issue.
 - Disclosure State: private
-- Boundaries: Do not frame this as a fixed trait of the human.
+- Boundary: Do not frame this as a fixed trait of the human.
 - Evidence Anchors: `ascension/private/journal_2026-02-18_conflict_after_long_thread.private_journal.md#what-happened`
 - Confidence: high
 - Scope: Emotional processing conversations
